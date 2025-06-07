@@ -55,3 +55,5 @@ Thumbs.db
 
 # Environment variables
 *.
+# Local Netlify folder
+.netlify
