@@ -1,0 +1,64 @@
+services:
+  # Backend API
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - MONGODB_URL=mongodb://mongodb:27017/interim_app
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app  # Fixed: map backend directory to /app
+    networks:
+      - interim-network
+
+  # Frontend React App
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app  # Add volume mapping for frontend too
+      - /app/node_modules  # Prevent node_modules from being overwritten
+    networks:
+      - interim-network
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=interim_app
+    networks:
+      - interim-network
+
+  # MongoDB Admin Interface
+  mongo-express:
+    image: mongo-express:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - interim-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  interim-network:
+    driver: bridge
